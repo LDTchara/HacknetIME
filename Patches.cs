@@ -213,8 +213,8 @@ namespace HacknetIME
             float x = __instance.bounds.X + 3 + Terminal.PROMPT_OFFSET + textWidth;
             if (TextBox.textDrawOffsetPosition > 0) x -= TextBox.textDrawOffsetPosition;
 
-            // 组合文本（+2,+2 微调对齐）
-            Vector2 pos = new Vector2(x + 2, lineY + 3);
+            // 组合文本（+2,+3 微调对齐）
+            Vector2 pos = new(x + 2, lineY + 3);
             GuiData.spriteBatch.DrawString(font, comp, pos, Color.White);
 
             // 下划线
@@ -264,15 +264,14 @@ namespace HacknetIME
                  * 如需调整位置，只需修改 xOffset 和 yOffset 后面的数字即可。
                  */
 
-                // 计算候选词列表总宽度（动态适应长词）
+                // 裸文本测量：只算候选词本身宽度，序号不占额外宽度
                 float maxWidth = 0;
                 foreach (var c in cands)
                 {
-                    string text = (cands.IndexOf(c) + 1) + "." + c;
-                    float w = font.MeasureString(text).X;
+                    float w = font.MeasureString(c).X + 16;
                     if (w > maxWidth) maxWidth = w;
                 }
-                float listWidth = maxWidth + 20; // 左右各留10像素边距
+                float listWidth = Math.Max(maxWidth, 200);
 
                 // 候选框起点坐标（可根据需要调整）
                 int xOffset = 10;                      // 水平偏移
@@ -281,16 +280,29 @@ namespace HacknetIME
                 int listHeight = (int)(charHeight * cands.Count);
                 int yBase = __instance.bounds.Y + __instance.bounds.Height - yOffset - listHeight;
 
-                // 绘制半透明背景（黑色，透明度 180）
-                Rectangle bgRect = new Rectangle(x - 5, yBase - 5, (int)listWidth, listHeight + 10);
-                GuiData.spriteBatch.Draw(Utils.white, bgRect, new Color(0, 0, 0, 180));
+                // 绘制半透明背景（颜色来自配置）
+                Rectangle bgRect = new(x - 5, yBase - 5, (int)listWidth, listHeight + 10);
+                var bgCol = HacknetIME.ParseColor(HacknetIME.CandBgColor.Value, new Color(0, 0, 0, 180));
+                GuiData.spriteBatch.Draw(Utils.white, bgRect, bgCol);
 
                 // 逐条绘制候选词
                 for (int i = 0; i < cands.Count; i++)
                 {
                     string text = (i + 1) + "." + cands[i];
-                    Color col = (i == TSFManager.CandidateSelection) ? Color.Yellow : Color.White;
-                    Vector2 pos = new Vector2(x, yBase + i * charHeight);
+                    bool sel = i == TSFManager.CandidateSelection;
+                    Color col = sel
+                        ? HacknetIME.ParseColor(HacknetIME.CandSelTextColor.Value, Color.White)
+                        : HacknetIME.ParseColor(HacknetIME.CandTextColor.Value, Color.White);
+                    Vector2 pos = new(x, yBase + i * charHeight);
+
+                    // 选中行高亮背景
+                    if (sel)
+                    {
+                        var selBg = HacknetIME.ParseColor(HacknetIME.CandSelBgColor.Value, new Color(0, 255, 255, 128));
+                        Rectangle hlRect = new(x - 4, (int)(yBase + i * charHeight - 2), (int)listWidth - 2, (int)charHeight);
+                        GuiData.spriteBatch.Draw(Utils.white, hlRect, selBg);
+                    }
+
                     GuiData.spriteBatch.DrawString(font, text, pos, col);
                 }
             }
