@@ -10,7 +10,7 @@ namespace HacknetIME
     public static class TSFManager
     {
         /// <summary>候选词列表</summary>
-        public static List<string> Candidates = new List<string>();
+        public static List<string> Candidates = new();
         /// <summary>当前高亮候选词索引</summary>
         public static int CandidateSelection = 0;
         /// <summary>是否已成功初始化</summary>
@@ -98,7 +98,7 @@ namespace HacknetIME
                 if (highSurrogateBuffer.HasValue)
                 {
                     // 配对成功：组合成完整码点并注入
-                    string completed = new string(new[] { highSurrogateBuffer.Value, character });
+                    string completed = new(new[] { highSurrogateBuffer.Value, character });
                     highSurrogateBuffer = null;
                     IMEManager.InjectText(completed);
                 }
