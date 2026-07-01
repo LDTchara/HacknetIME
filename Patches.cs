@@ -3,7 +3,6 @@ using Hacknet.Gui;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using HacknetIME;
 using Microsoft.Xna.Framework.Input;
 
 namespace HacknetIME
@@ -181,7 +180,7 @@ namespace HacknetIME
     }
 
     // ═══════════════════════════════════════════════════════
-    // 2. 绘制组合文本（光标跟随 + 下划线）
+    // 2. 组合文本绘制 — 输入中的文字 + 下划线 + 第二闪烁光标
     // ═══════════════════════════════════════════════════════
     [HarmonyPatch(typeof(Terminal), "Draw")]
     internal class Patch_DrawComposition
@@ -352,17 +351,17 @@ namespace HacknetIME
     [HarmonyPatch(typeof(Game1), "Update")]
     internal class Patch_DelayedTSFInit
     {
-        static bool tsfinited;
-        static void Prefix(Game1 __instance)
-        {
-            if (tsfinited || !IMEManager.UseTSF) return;
-            if (__instance.Window?.Handle != IntPtr.Zero)
+            static bool tsfinited;
+            static void Prefix(Game1 __instance)
             {
-                TSFManager.Initialize(__instance.Window.Handle);
-                tsfinited = true;
+                if (tsfinited || !IMEManager.UseTSF) return;
+                if (__instance.Window?.Handle != IntPtr.Zero)
+                {
+                    TSFManager.Initialize(__instance.Window.Handle);
+                    tsfinited = true;
+                }
             }
         }
-    }
 
     // ═══════════════════════════════════════════════════════
     // 6. 每帧更新 TSF 文本输入矩形（供 ImeSharp 内部使用）
@@ -370,28 +369,32 @@ namespace HacknetIME
     [HarmonyPatch(typeof(Terminal), "doGui")]
     internal class Patch_UpdateTSFRect
     {
-        static void Postfix(Terminal __instance)
-        {
-            if (__instance.os?.inputEnabled == true)
-                TSFManager.UpdateTextInputRect(__instance.bounds);
+            static void Postfix(Terminal __instance)
+            {
+                if (__instance.os?.inputEnabled == true)
+                    TSFManager.UpdateTextInputRect(__instance.bounds);
+            }
         }
-    }
     
-[HarmonyPatch(typeof(TextBox), "doTerminalTextField")]
-internal static class Patch_HideCursorDuringComposition
-{
-    static bool Prefix(int myID, int x, int y, int width, int selectionHeight, int lines, string str, SpriteFont font, ref string __result)
-    {
-        var comp = IMEManager.CompositionString;
-        if (string.IsNullOrEmpty(comp)) return true;
+    [HarmonyPatch(typeof(TextBox), "doTerminalTextField")]
 
-        // 组合时自己处理文本框，不绘制光标
-        if (font == null) font = GuiData.smallfont;
-        TextBox.BoxWasActivated = false;
-        TextBox.UpWasPresed = false; TextBox.DownWasPresed = false; TextBox.TabWasPresed = false;
-        var tmpRect = GuiData.tmpRect;
-        tmpRect.X = x; tmpRect.Y = y; tmpRect.Width = width; tmpRect.Height = 0;
-        if (tmpRect.Contains(GuiData.getMousePoint())) GuiData.hot = myID;
+    // ═══════════════════════════════════════════════════════
+    // 7. 组合时光标隐藏 — Prefix 替换 doTerminalTextField，跳过原版光标绘制
+    // ═══════════════════════════════════════════════════════
+    internal static class Patch_HideCursorDuringComposition
+    {
+        static bool Prefix(int myID, int x, int y, int width, int selectionHeight, int lines, string str, SpriteFont font, ref string __result)
+        {
+            var comp = IMEManager.CompositionString;
+            if (string.IsNullOrEmpty(comp)) return true;
+
+            // 组合时自己处理文本框，不绘制光标
+            if (font == null) font = GuiData.smallfont;
+            TextBox.BoxWasActivated = false;
+            TextBox.UpWasPresed = false; TextBox.DownWasPresed = false; TextBox.TabWasPresed = false;
+            var tmpRect = GuiData.tmpRect;
+            tmpRect.X = x; tmpRect.Y = y; tmpRect.Width = width; tmpRect.Height = 0;
+            if (tmpRect.Contains(GuiData.getMousePoint())) GuiData.hot = myID;
         else if (GuiData.hot == myID) GuiData.hot = -1;
         if (GuiData.mouseWasPressed())
         {
@@ -421,6 +424,10 @@ internal static class Patch_HideCursorDuringComposition
     }
 }
     [HarmonyPatch(typeof(MainMenu), "resetOS")]
+
+    // ═══════════════════════════════════════════════════════
+    // 8. resetOS 重设偏移 — 回主菜单时清空文字偏移状态
+    // ═══════════════════════════════════════════════════════
     internal class Patch_ResetTextDrawOffset
     {
         static void Postfix()

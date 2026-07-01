@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Hacknet;
-using ImeSharp;
+﻿using ImeSharp;
 using Microsoft.Xna.Framework;
 using SDL2;
 
