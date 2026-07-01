@@ -1,11 +1,8 @@
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Hacknet;
-using HarmonyLib;
 using Microsoft.Xna.Framework;
 using System.Runtime.InteropServices;
-using Hacknet.Gui;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace HacknetIME;
 
