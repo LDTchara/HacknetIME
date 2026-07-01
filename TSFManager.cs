@@ -1,6 +1,7 @@
 ﻿using ImeSharp;
 using Microsoft.Xna.Framework;
 using SDL2;
+using System.Runtime.InteropServices;
 
 namespace HacknetIME
 {
@@ -27,6 +28,12 @@ namespace HacknetIME
         /// <param name="windowHandle">SDL 窗口句柄（Game1.Window.Handle）</param>
         public static void Initialize(IntPtr windowHandle)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Console.WriteLine("[TSFManager] TSF initialization skipped on non-Windows platform.");
+                return;
+            }
+
             if (Initialized || windowHandle == IntPtr.Zero) return;
             sdlWindowHandle = windowHandle;
 
