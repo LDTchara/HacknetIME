@@ -73,10 +73,10 @@ CandTextColor = #FFFFFFFF
 
 ### ⚠️ 兼容性说明
 
-- **本模组与 KernelFix (KF) 的输入法部分功能重叠，KF 已有此功能时无需单独安装 HacknetIME。** 在 HacknetIME 完全稳定后，KF 将移除输入法功能并推荐用户转用本模组，以减少两个模组间的维护重叠。
-- 本模组未包含 KF 的高 DPI 修复和高帧率 RAM 截断修复。如果同时需要这些功能，请继续使用或补装 KF。
-- **与 `TAXCoreCNfix` 不兼容**，两者同时加载会导致输入冲突。如果当前使用 `TAXCoreCNfix`，请在安装 HacknetIME 前移除。
-- 建议与 **HacknetFontReplace**（或 UTF-16 修复版 [HacknetFontReplace_UTF16Fix](https://github.com/LDTchara/HacknetFontReplace_UTF16Fix)）同时使用，以解决部分汉字显示为 `?` 的问题。
+- **本模组与 1.0.4 及之前版本的 KernelFix 功能重叠。若已在用旧版 KF，无需单独安装 HacknetIME。**（但还是建议装新版 KF）
+- 本模组未包含 KernelFix 的其他修复（DPI 修正、OpenAL 兼容等）。如需这些功能，请补装 KernelFix。
+- **与 [TAXCoreCNfix](https://github.com/Dsl114514/TAXCore-CN-fix) 不兼容**，两者同时加载会导致输入冲突。使用 HacknetIME 前请先移除 `TAXCoreCNfix`。
+- 建议配合 **[HacknetFontReplace](https://github.com/fengxu-30338/HacknetFontReplace)**（或 UTF-16 修复版 [HacknetFontReplace_UTF16Fix](https://github.com/LDTchara/HacknetFontReplace_UTF16Fix)）使用，以解决部分汉字显示为 `?` 的问题。
 - Linux / macOS 下 TSF 不可用，输入法通过 SDL 文字事件实现，候选框不显示（系统输入法自带候选界面）。
 
 ### 🔧 构建方法
@@ -160,10 +160,10 @@ CandTextColor = #FFFFFFFF
 
 ### ⚠️ Compatibility
 
-- **This mod overlaps with KernelFix (KF)'s IME portion; skip this if KF is already installed.** Once HacknetIME is stable, KF will drop its IME functionality and redirect users here.
-- Does not include KF's high-DPI fix or high-refresh-rate RAM truncation fix. Install KF alongside if you need those.
-- **Incompatible with `TAXCoreCNfix`** — running both causes input conflicts. Remove `TAXCoreCNfix` before installing HacknetIME.
-- Recommended to use with **HacknetFontReplace** (or the UTF-16 fixed fork [HacknetFontReplace_UTF16Fix](https://github.com/LDTchara/HacknetFontReplace_UTF16Fix)) to resolve missing glyphs (`?` placeholders).
+- **This mod overlaps with KernelFix (KF) v1.0.4 and earlier's IME functionality. If KF is already installed, HacknetIME is not required.** (Updating to the latest KF is still recommended.)
+- Does not include KF's other fixes (DPI, OpenAL, etc.). Install KF alongside if you need those.
+- **Incompatible with [TAXCoreCNfix](https://github.com/Dsl114514/TAXCore-CN-fix)** — running both causes input conflicts. Remove `TAXCoreCNfix` before installing HacknetIME.
+- Recommended to use with **[HacknetFontReplace](https://github.com/fengxu-30338/HacknetFontReplace)** (or the UTF-16 fixed fork [HacknetFontReplace_UTF16Fix](https://github.com/LDTchara/HacknetFontReplace_UTF16Fix)) to resolve missing glyphs (`?` placeholders).
 - On Linux / macOS, TSF is unavailable; input uses SDL text events. The candidate box is not rendered (the system IME provides its own candidate window).
 
 ### 🔧 Building
