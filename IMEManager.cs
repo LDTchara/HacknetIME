@@ -33,6 +33,13 @@ namespace HacknetIME
                 // 如果 ScreenManager 显示的是 MainMenuScreen，也是在菜单
                 var os = OS.currentInstance;
                 if (os == null || os.terminal == null || os.HasExitedAndEnded) return false;
+                // 仅当该 OS 屏幕仍处于激活状态时才接管输入。
+                // 原版 Run Verification Tests（ExtensionTests.TestExtensionForRuntime）
+                // 会 new OS()（构造函数设置 currentInstance），结束时只从 ScreenManager
+                // 移除屏幕、未清空静态引用 —— 回到主菜单后 currentInstance 仍指向已被隐藏的
+                // 测试 OS，此处若只检查 null 就会把主菜单误判为「终端活跃」，
+                // 从而拦掉主菜单全部字符输入。
+                if (!os.IsActive) return false;
                 if (UseTSF) return TSFManager.Initialized;
                 // 非 TSF 模式：IME 就绪 + 终端可输入
                 if (eventFilterDelegate == null) return false;
