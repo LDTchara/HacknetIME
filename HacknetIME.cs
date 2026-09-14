@@ -11,7 +11,7 @@ public class HacknetIME : HacknetPlugin
 {
     public const string ModGUID = "com.LDTchara.HacknetIME";
     public const string ModName = "HacknetIME";
-    public const string ModVer = "1.0.0";
+    public const string ModVer = "1.0.1";
 
     // ── BepInEx 配置 ──
     public static ConfigEntry<bool> ConfigDebug;
