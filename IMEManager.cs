@@ -26,20 +26,29 @@ namespace HacknetIME
         {
             get
             {
-                // 有组合文本时肯定活跃
-                if (!string.IsNullOrEmpty(CompositionString)) return true;
-                // 主菜单界面不活跃
-                // 如果 OS.currentInstance 不存在，说明在菜单
-                // 如果 ScreenManager 显示的是 MainMenuScreen，也是在菜单
                 var os = OS.currentInstance;
-                if (os == null || os.terminal == null || os.HasExitedAndEnded) return false;
-                // 仅当该 OS 屏幕仍处于激活状态时才接管输入。
-                // 原版 Run Verification Tests（ExtensionTests.TestExtensionForRuntime）
-                // 会 new OS()（构造函数设置 currentInstance），结束时只从 ScreenManager
-                // 移除屏幕、未清空静态引用 —— 回到主菜单后 currentInstance 仍指向已被隐藏的
-                // 测试 OS，此处若只检查 null 就会把主菜单误判为「终端活跃」，
-                // 从而拦掉主菜单全部字符输入。
-                if (!os.IsActive) return false;
+                // 终端上下文是否成立：OS 存在、终端已建、未退出、且屏幕仍在 ScreenManager 列表中。
+                // ══ 为什么不用 os.IsActive ══
+                // ScreenManager.RemoveScreen 只做 UnloadContent + 从列表移除，不更新 screenState；
+                // 被移除的屏幕不再收到 Update，screenState 永远停在 TransitionOn/Active，
+                // 于是 IsActive 恒为 true（实测：Run Verification Tests 残留的测试 OS
+                // 回到主菜单后仍报告 state=TransitionOn）。改为查询屏幕列表才能正确识别残留。
+                bool terminalActive = os != null && os.terminal != null && !os.HasExitedAndEnded && IsScreenLive(os);
+
+                // 组合文本只有在终端场景下才代表「正在输入」。
+                // 若在非终端场景发现残留（组合被失焦/OS 生命周期变动打断，TSF 不再回调空串），
+                // 就地清掉自愈 —— 否则这条短路会让 IsActive 永远为 true，
+                // 吞掉主菜单等界面的全部输入。
+                if (!string.IsNullOrEmpty(CompositionString))
+                {
+                    if (terminalActive) return true;
+                    CompositionString = "";
+                    TSFManager.Candidates.Clear();
+                    TSFManager.CandidateSelection = 0;
+                    return false;
+                }
+
+                if (!terminalActive) return false;
                 if (UseTSF) return TSFManager.Initialized;
                 // 非 TSF 模式：IME 就绪 + 终端可输入
                 if (eventFilterDelegate == null) return false;
@@ -49,6 +58,31 @@ namespace HacknetIME
 
         private static SDL.SDL_EventFilter eventFilterDelegate;
         private static IntPtr filterUserdata = IntPtr.Zero;
+
+        /// <summary>
+        /// 该屏幕是否仍在 ScreenManager 的屏幕列表中。
+        /// 不能用 GameScreen.IsActive：RemoveScreen 只把屏幕移出列表、不更新 screenState，
+        /// 被移除的屏幕不再收到 Update，screenState 永远停在 TransitionOn/Active，
+        /// IsActive 于是恒为 true。
+        /// </summary>
+        private static bool IsScreenLive(GameScreen screen)
+        {
+            try
+            {
+                var sm = screen.ScreenManager;
+                if (sm == null) return false;
+                var screens = sm.GetScreens();
+                for (int i = 0; i < screens.Length; i++)
+                {
+                    if (ReferenceEquals(screens[i], screen)) return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public static void Initialize()
         {
