@@ -22,12 +22,17 @@ namespace HacknetIME
                 // 此时应让原方法处理剪贴板文字，不要拦截。
                 KeyboardState ks = GuiData.getKeyboadState();
                 if (ks.IsKeyDown(Keys.LeftControl) || ks.IsKeyDown(Keys.RightControl))
+                {
+                    Diagnostics.LogDecision("getFilteredKeys", takenOver: false);
                     return true;
+                }
 
+                Diagnostics.LogDecision("getFilteredKeys", takenOver: true);
                 GuiData.TextInputHook?.clearBuffer();
                 __result = new char[0];
                 return false;
             }
+            Diagnostics.LogDecision("getFilteredKeys", takenOver: false);
             return true;
         }
     }
@@ -49,7 +54,11 @@ namespace HacknetIME
             if (TextBox.cursorPosition < 0) TextBox.cursorPosition = 0;
             if (TextBox.cursorPosition > s.Length) TextBox.cursorPosition = s.Length;
 
-            if (!IMEManager.IsActive) return true;
+            if (!IMEManager.IsActive)
+            {
+                Diagnostics.LogDecision("getFilteredStringInput", takenOver: false);
+                return true;
+            }
 
             // 如果 Ctrl 被按下，说明用户正在执行复制/粘贴等快捷键，
             // 此时应完全交给原方法处理，避免破坏剪贴板功能。
@@ -68,6 +77,8 @@ namespace HacknetIME
                     break;
                 }
             }
+
+            Diagnostics.LogDecision("getFilteredStringInput", takenOver: hasCharKey, extraChars: s.Length);
 
             if (hasCharKey)
             {
@@ -435,6 +446,20 @@ namespace HacknetIME
         return false;
     }
 }
+    [HarmonyPatch(typeof(Game1), "Update")]
+
+    // ═══════════════════════════════════════════════════════
+    // 9. 输入链路诊断采样（仅 Debug 开启时输出，状态变化才打印）
+    // ═══════════════════════════════════════════════════════
+    internal static class Patch_InputDiagnostics
+    {
+        static void Postfix()
+        {
+            if (!HacknetIME.ConfigDebug.Value) return;
+            Diagnostics.Tick();
+        }
+    }
+
     [HarmonyPatch(typeof(MainMenu), "resetOS")]
 
     // ═══════════════════════════════════════════════════════
