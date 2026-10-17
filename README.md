@@ -176,4 +176,4 @@ Output: `bin/Debug/net472/HacknetIME.dll` (single DLL, ImeSharp embedded via Cos
 
 ---
 
-**License**: MIT — see [LICENSE](LICENSE).
+**License**: MIT-0 (MIT No Attribution) — see [LICENSE](LICENSE).
